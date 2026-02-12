@@ -83,7 +83,6 @@ export const update: RequestHandler = async (req: Request, res: Response): Promi
         }
 
         await todo.save();
-
         res.status(200).json({ todo });
     } catch (error: unknown) {
         console.log('Sequelize Error', error);
@@ -91,4 +90,28 @@ export const update: RequestHandler = async (req: Request, res: Response): Promi
     }
 };
 
-export const remove: RequestHandler = async (req: Request, res: Response): Promise<void> => { };
+export const remove: RequestHandler = async (req: Request, res: Response): Promise<void> => { 
+    const id: number = Number(req.params.id);
+
+    const IS_ID_NOT_SENT: boolean = !id;
+
+    if (IS_ID_NOT_SENT) {
+        res.status(400).json({ error: 'O campo "id" é obrigatório.' });
+        return;
+    }
+    
+    try {
+        const todo: TodoInstance | null = await Todo.findByPk(id);
+
+        if (!todo) {
+            res.status(404).json({ error: 'Todo não encontrado.' });
+            return;
+        }
+
+        await todo.destroy();
+        res.status(204).json({ message: 'Todo removido com sucesso.' });
+    } catch (error: unknown) {
+        console.log('Sequelize Error', error);
+        res.status(500).json({ error: 'Ocorreu um erro interno.' });
+    }
+};
