@@ -1,4 +1,4 @@
-import { Model, DataTypes } from 'sequelize';
+import { Model, DataTypes, ModelCtor } from 'sequelize';
 import { sequelize } from '../instances/pg';
 
 export interface UserInstance extends Model {
@@ -7,7 +7,7 @@ export interface UserInstance extends Model {
     password: string;
 }
 
-export const User = sequelize.define<UserInstance>('User', {
+export const User: ModelCtor<UserInstance> = sequelize.define<UserInstance>('User', {
     id: {
         primaryKey: true,
         autoIncrement: true,

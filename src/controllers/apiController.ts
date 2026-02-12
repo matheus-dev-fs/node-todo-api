@@ -1,53 +1,61 @@
-import { Request, Response } from 'express';
-import { User } from '../models/User';
+import { Request, RequestHandler, Response } from 'express';
+import { User, UserInstance } from '../models/User';
 
-export const ping = (req: Request, res: Response) => {
-    res.json({pong: true});
+export const ping: RequestHandler = (req: Request, res: Response): void => {
+    res.json({ pong: true });
 }
 
-export const register = async (req: Request, res: Response) => {
-    if(req.body.email && req.body.password) {
-        let { email, password } = req.body;
+export const register: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const IS_EMAIL_AND_PASSWORD_NOT_SENT: boolean = !req.body.email || !req.body.password;
 
-        let hasUser = await User.findOne({where: { email }});
-        if(!hasUser) {
-            let newUser = await User.create({ email, password });
-
-            res.status(201);
-            res.json({ id: newUser.id });
-        } else {
-            res.json({ error: 'E-mail já existe.' });
-        }
+    if (IS_EMAIL_AND_PASSWORD_NOT_SENT) {
+        res.status(400).json({ error: 'E-mail e/ou senha não enviados.' });
+        return;
     }
 
-    res.json({ error: 'E-mail e/ou senha não enviados.' });
+    const { email, password } = req.body;
+
+    const HAS_USER: UserInstance | null = await User.findOne({ where: { email } });
+
+    if (HAS_USER) {
+        res.status(409).json({ error: 'E-mail já existe.' });
+        return;
+    }
+
+    const newUser: UserInstance = await User.create({ email, password });
+
+    res.status(201).json({ id: newUser.id });
 }
 
-export const login = async (req: Request, res: Response) => {
-    if(req.body.email && req.body.password) {
-        let email: string = req.body.email;
-        let password: string = req.body.password;
+export const login: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const IS_EMAIL_AND_PASSWORD_NOT_SENT: boolean = !req.body.email || !req.body.password;
 
-        let user = await User.findOne({ 
-            where: { email, password }
-        });
-
-        if(user) {
-            res.json({ status: true });
-            return;
-        }
+    if (IS_EMAIL_AND_PASSWORD_NOT_SENT) {
+        res.status(400).json({ error: 'E-mail e/ou senha não enviados.' });
+        return;
     }
 
-    res.json({ status: false });
+    const { email, password } = req.body;
+
+    const user: UserInstance | null = await User.findOne({
+        where: { email, password }
+    });
+
+    if (!user) {
+        res.status(401).json({ error: 'E-mail e/ou senha inválidos.' });
+        return;
+    }
+
+    res.status(200).json({ status: true });
 }
 
-export const list = async (req: Request, res: Response) => {
-    let users = await User.findAll();
-    let list: string[] = [];
+export const list: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const users: UserInstance[] = await User.findAll();
+    const list: string[] = [];
 
-    for(let i in users) {
-        list.push( users[i].email );
+    for (const user of users) {
+        list.push(user.email);
     }
 
-    res.json({ list });
+    res.status(200).json({ list });
 }
