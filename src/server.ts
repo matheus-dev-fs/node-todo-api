@@ -3,7 +3,6 @@ import path from 'path';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import apiRoutes from './routes/api';
-import { ping } from './controllers/apiController';
 
 dotenv.config();
 
@@ -13,8 +12,6 @@ server.use(cors());
 
 server.use(express.static(path.join(__dirname, '../public')));
 server.use(express.urlencoded({ extended: true }));
-
-server.get('/ping', ping);
 
 server.use(apiRoutes);
 
